@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	_ "embed"
 	"errors"
+	"log"
 	"os"
 	"time"
 
@@ -26,10 +27,6 @@ const schema = `
 var ErrNotInitialized = errors.New("database is not initialized")
 var ErrTaskIsNil = errors.New("task is nil")
 
-type Database struct {
-	inner *sql.DB
-}
-
 type Task struct {
 	ID      string `json:"id"`
 	Date    string `json:"date"`
@@ -43,10 +40,7 @@ var sql_db *sql.DB
 func Init(dbFile string) error {
 	_, err := os.Stat(dbFile)
 
-	install := false
-	if err != nil {
-		install = true
-	}
+	install := err != nil
 
 	db, err := sql.Open("sqlite", dbFile)
 	if err != nil {
@@ -120,7 +114,12 @@ func GetTasks(limit int, search string) ([]*Task, error) {
 	if err != nil {
 		return []*Task{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			log.Println("ERROR: could not close sql rows: ", err)
+		}
+	}()
 
 	tasks := make([]*Task, 0, limit)
 	for rows.Next() {

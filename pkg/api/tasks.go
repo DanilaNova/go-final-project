@@ -22,7 +22,10 @@ func tasksHandlerGet(response http.ResponseWriter, request *http.Request) {
 	}
 
 	response.WriteHeader(http.StatusOK)
-	writeJson(response, TaskList{tasks})
+	err = writeJson(response, TaskList{tasks})
+	if err != nil {
+		log.Println("ERROR: could not write response: ", err)
+	}
 }
 
 func tasksHandler(response http.ResponseWriter, request *http.Request) {

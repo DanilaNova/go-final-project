@@ -72,8 +72,13 @@ func sighinHandler(response http.ResponseWriter, request *http.Request) {
 
 	passRequest := new(PassRequest)
 	err = json.Unmarshal(data, passRequest)
+	if err != nil {
+		log.Println("ERROR: could not parse pass request: ", err)
+		writeError(response, http.StatusInternalServerError, err)
+	}
 
 	if passRequest.Password != string(pass) {
+		log.Println("WARNING: authentification wasn't passed")
 		writeError(response, http.StatusUnauthorized, ErrAuthentificationRequired)
 		return
 	}

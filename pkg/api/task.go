@@ -146,7 +146,10 @@ func taskHandlerPut(response http.ResponseWriter, request *http.Request) {
 	}
 
 	response.WriteHeader(http.StatusOK)
-	writeJson(response, struct{}{})
+	err = writeJson(response, struct{}{})
+	if err != nil {
+		log.Println("ERROR: could not write response: ", err)
+	}
 }
 
 func taskHandlerDelete(response http.ResponseWriter, request *http.Request) {

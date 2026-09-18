@@ -291,7 +291,10 @@ func nextDateHandler(response http.ResponseWriter, request *http.Request) {
 	now, err := time.Parse(db.DateFormat, request.FormValue("now"))
 	if err != nil {
 		response.WriteHeader(http.StatusBadRequest)
-		response.Write([]byte(err.Error()))
+		_, err := response.Write([]byte(err.Error()))
+		if err != nil {
+			log.Println("ERROR: could not write error response: ", err)
+		}
 		return
 	}
 	date := request.FormValue("date")
@@ -301,10 +304,16 @@ func nextDateHandler(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		log.Println("ERROR: cannot solve next date: ", err)
 		response.WriteHeader(http.StatusInternalServerError)
-		response.Write([]byte(err.Error()))
+		_, err = response.Write([]byte(err.Error()))
+		if err != nil {
+			log.Println("ERROR: could not write error response: ", err)
+		}
 		return
 	}
 
 	response.WriteHeader(http.StatusOK)
-	response.Write([]byte(date))
+	_, err = response.Write([]byte(date))
+	if err != nil {
+		log.Println("ERROR: could not write response: ", err)
+	}
 }
