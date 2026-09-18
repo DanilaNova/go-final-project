@@ -38,7 +38,7 @@ type Task struct {
 	Comment string `json:"comment"`
 }
 
-var DB Database
+var sql_db *sql.DB
 
 func Init(dbFile string) error {
 	_, err := os.Stat(dbFile)
@@ -53,10 +53,10 @@ func Init(dbFile string) error {
 		return err
 	}
 
-	DB.inner = db
+	sql_db = db
 
 	if install {
-		_, err := DB.inner.Exec(schema)
+		_, err := sql_db.Exec(schema)
 		if err != nil {
 			return err
 		}
@@ -66,7 +66,7 @@ func Init(dbFile string) error {
 }
 
 func AddTask(task *Task) (int64, error) {
-	if DB.inner == nil {
+	if sql_db == nil {
 		return 0, ErrNotInitialized
 	}
 
@@ -77,7 +77,7 @@ func AddTask(task *Task) (int64, error) {
 	var id int64
 	query := `INSERT INTO scheduler (date, title, repeat, comment) VALUES (@date, @title, @repeat, @comment);`
 
-	res, err := DB.inner.Exec(query,
+	res, err := sql_db.Exec(query,
 		sql.Named("date", task.Date),
 		sql.Named("title", task.Title),
 		sql.Named("repeat", task.Repeat),
@@ -90,7 +90,7 @@ func AddTask(task *Task) (int64, error) {
 }
 
 func GetTasks(limit int, search string) ([]*Task, error) {
-	if DB.inner == nil {
+	if sql_db == nil {
 		return []*Task{}, ErrNotInitialized
 	}
 
@@ -113,7 +113,7 @@ func GetTasks(limit int, search string) ([]*Task, error) {
 	}
 	query += queryEnd
 
-	rows, err := DB.inner.Query(query,
+	rows, err := sql_db.Query(query,
 		sql.Named("search", "%"+search+"%"),
 		sql.Named("limit", limit),
 		sql.Named("date", date))
@@ -136,4 +136,95 @@ func GetTasks(limit int, search string) ([]*Task, error) {
 	}
 
 	return tasks, nil
+}
+
+func GetTask(id string) (*Task, error) {
+	if sql_db == nil {
+		return nil, ErrNotInitialized
+	}
+
+	query := `SELECT * FROM scheduler WHERE id = @id`
+	row := sql_db.QueryRow(query, sql.Named("id", id))
+
+	task := new(Task)
+	err := row.Scan(&task.ID, &task.Date, &task.Title, &task.Repeat, &task.Comment)
+	if err != nil {
+		return nil, err
+	}
+
+	return task, nil
+}
+
+func UpdateTask(task *Task) error {
+	if sql_db == nil {
+		return ErrNotInitialized
+	}
+
+	query := `UPDATE scheduler SET date = @date, title = @title, repeat = @repeat, comment = @comment WHERE id = @id`
+	result, err := sql_db.Exec(query,
+		sql.Named("id", task.ID),
+		sql.Named("date", task.Date),
+		sql.Named("title", task.Title),
+		sql.Named("repeat", task.Repeat),
+		sql.Named("comment", task.Comment))
+	if err != nil {
+		return err
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
+func DeleteTask(id string) error {
+	if sql_db == nil {
+		return ErrNotInitialized
+	}
+
+	query := `DELETE FROM scheduler WHERE id = @id`
+	result, err := sql_db.Exec(query,
+		sql.Named("id", id))
+	if err != nil {
+		return err
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
+func UpdateDate(next string, id string) error {
+	if sql_db == nil {
+		return ErrNotInitialized
+	}
+
+	query := `UPDATE scheduler SET date = @next WHERE id = @id`
+	result, err := sql_db.Exec(query,
+		sql.Named("id", id),
+		sql.Named("next", next))
+	if err != nil {
+		return err
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
 }

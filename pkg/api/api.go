@@ -7,7 +7,7 @@ import (
 )
 
 type ErrorResponse struct {
-	Error error `json:"error"`
+	Error string `json:"error"`
 }
 
 func writeJson(response http.ResponseWriter, data any) error {
@@ -21,7 +21,7 @@ func writeJson(response http.ResponseWriter, data any) error {
 
 func writeError(response http.ResponseWriter, code int, err error) {
 	response.WriteHeader(code)
-	err = writeJson(response, ErrorResponse{err})
+	err = writeJson(response, ErrorResponse{err.Error()})
 	if err != nil {
 		log.Println("ERROR: could not write error response: ", err)
 	}
@@ -30,5 +30,6 @@ func writeError(response http.ResponseWriter, code int, err error) {
 func Init() {
 	http.HandleFunc("/api/nextdate", nextDateHandler)
 	http.HandleFunc("/api/task", taskHandler)
+	http.HandleFunc("/api/task/done", taskDoneHandler)
 	http.HandleFunc("/api/tasks", tasksHandler)
 }

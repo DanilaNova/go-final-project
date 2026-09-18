@@ -272,7 +272,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 	case "m":
 		date, err = ruleMonth(now, date, repeat_params[1:])
 	default:
-		err = ErrUnknownRepeatRule
+		err = fmt.Errorf(`%w (%s)`, ErrUnknownRepeatRule, repeat_params[0])
 	}
 	if err != nil {
 		return "", err
