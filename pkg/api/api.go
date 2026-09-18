@@ -29,7 +29,8 @@ func writeError(response http.ResponseWriter, code int, err error) {
 
 func Init() {
 	http.HandleFunc("/api/nextdate", nextDateHandler)
-	http.HandleFunc("/api/task", taskHandler)
-	http.HandleFunc("/api/task/done", taskDoneHandler)
-	http.HandleFunc("/api/tasks", tasksHandler)
+	http.HandleFunc("/api/task", auth(taskHandler))
+	http.HandleFunc("/api/task/done", auth(taskDoneHandler))
+	http.HandleFunc("/api/tasks", auth(tasksHandler))
+	http.HandleFunc("/api/signin", sighinHandler)
 }
