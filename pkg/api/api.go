@@ -30,4 +30,5 @@ func writeError(response http.ResponseWriter, code int, err error) {
 func Init() {
 	http.HandleFunc("/api/nextdate", nextDateHandler)
 	http.HandleFunc("/api/task", taskHandler)
+	http.HandleFunc("/api/tasks", tasksHandler)
 }

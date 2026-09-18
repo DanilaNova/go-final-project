@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"errors"
 	"os"
+	"time"
 
 	_ "modernc.org/sqlite"
 )
@@ -30,7 +31,7 @@ type Database struct {
 }
 
 type Task struct {
-	ID      int64  `json:"id"`
+	ID      string `json:"id"`
 	Date    string `json:"date"`
 	Title   string `json:"title"`
 	Repeat  string `json:"repeat"`
@@ -65,6 +66,10 @@ func Init(dbFile string) error {
 }
 
 func AddTask(task *Task) (int64, error) {
+	if DB.inner == nil {
+		return 0, ErrNotInitialized
+	}
+
 	if task == nil {
 		return 0, ErrTaskIsNil
 	}
@@ -82,4 +87,53 @@ func AddTask(task *Task) (int64, error) {
 	}
 
 	return id, err
+}
+
+func GetTasks(limit int, search string) ([]*Task, error) {
+	if DB.inner == nil {
+		return []*Task{}, ErrNotInitialized
+	}
+
+	queryStart := `SELECT * FROM scheduler `
+	querySearch := `WHERE title LIKE @search OR comment LIKE @search `
+	querySearchDate := `WHERE date = @date `
+	queryEnd := `ORDER BY date ASC LIMIT @limit`
+
+	query := queryStart
+	var date string
+	if len(search) != 0 {
+		t, err := time.Parse("02.01.2006", search)
+		if err != nil {
+			query += querySearch
+		} else {
+			date = t.Format("20060102")
+			query += querySearchDate
+		}
+
+	}
+	query += queryEnd
+
+	rows, err := DB.inner.Query(query,
+		sql.Named("search", "%"+search+"%"),
+		sql.Named("limit", limit),
+		sql.Named("date", date))
+	if err != nil {
+		return []*Task{}, err
+	}
+	defer rows.Close()
+
+	tasks := make([]*Task, 0, limit)
+	for rows.Next() {
+		task := new(Task)
+		err = rows.Scan(&task.ID, &task.Date, &task.Title, &task.Repeat, &task.Comment)
+		if err != nil {
+			return []*Task{}, err
+		}
+		tasks = append(tasks, task)
+	}
+	if err := rows.Err(); err != nil {
+		return []*Task{}, err
+	}
+
+	return tasks, nil
 }

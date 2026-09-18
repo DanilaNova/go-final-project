@@ -17,6 +17,10 @@ type TaskId struct {
 	ID int64 `json:"id"`
 }
 
+type TaskList struct {
+	Tasks []*db.Task `json:"tasks"`
+}
+
 func checkDate(task *db.Task) error {
 	if len(task.Date) == 0 {
 		task.Date = time.Now().Format(db.DateFormat)
@@ -89,6 +93,20 @@ func taskHandlerPost(response http.ResponseWriter, request *http.Request) {
 	}
 }
 
+func tasksHandlerGet(response http.ResponseWriter, request *http.Request) {
+	search := request.FormValue("search")
+
+	tasks, err := db.GetTasks(50, search)
+	if err != nil {
+		log.Println("ERROR: cound not get tasks: ", err)
+		writeError(response, http.StatusInternalServerError, err)
+		return
+	}
+
+	response.WriteHeader(http.StatusOK)
+	writeJson(response, TaskList{tasks})
+}
+
 func taskHandler(response http.ResponseWriter, request *http.Request) {
 	switch request.Method {
 	case http.MethodPost:
@@ -96,5 +114,15 @@ func taskHandler(response http.ResponseWriter, request *http.Request) {
 	default:
 		response.WriteHeader(http.StatusMethodNotAllowed)
 		response.Header().Set("Allow", "POST")
+	}
+}
+
+func tasksHandler(response http.ResponseWriter, request *http.Request) {
+	switch request.Method {
+	case http.MethodGet:
+		tasksHandlerGet(response, request)
+	default:
+		response.WriteHeader(http.StatusMethodNotAllowed)
+		response.Header().Set("Allow", "GET")
 	}
 }
