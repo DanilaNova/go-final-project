@@ -10,9 +10,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
-)
 
-const DateFormat = "20060102"
+	"github.com/DanilaNova/go-final-project/pkg/db"
+)
 
 var ErrNoRepeatRule = errors.New("repeat rule is empty")
 var ErrWrongRepeatRuleFormat = errors.New("repeat rule is in the wrong format")
@@ -25,6 +25,13 @@ var ErrWrongRepeatRuleFormatMonth = fmt.Errorf(`%w, expected "m <numbers separat
 
 var ErrNumberOutOfRange = errors.New("number is out of range")
 var ErrNoNextDateSolution = errors.New("no solution for next date with given rule")
+
+func dateIsAfter(date, now time.Time) bool {
+	date_year, date_month, date_day := date.Date()
+	now_year, now_month, now_day := now.Date()
+
+	return date_year > now_year || (date_year == now_year && (date_month > now_month || (date_month == now_month && date_day > now_day)))
+}
 
 func getDaysInMonth(date time.Time) int {
 	switch date.Month() {
@@ -74,7 +81,7 @@ func ruleDay(now time.Time, date time.Time, params []string) (time.Time, error) 
 
 	date = date.AddDate(0, 0, days)
 
-	for !date.After(now) {
+	for !dateIsAfter(date, now) {
 		date = date.AddDate(0, 0, days)
 	}
 
@@ -90,6 +97,9 @@ func ruleYear(now time.Time, date time.Time, params []string) (time.Time, error)
 	date = date.AddDate(1, 0, 0)
 	if !date.After(now) {
 		date = date.AddDate(now.Year()-date.Year(), 0, 0)
+	}
+	if !date.After(now) {
+		date = date.AddDate(1, 0, 0)
 	}
 
 	return date, nil
@@ -117,7 +127,7 @@ func ruleWeekday(now time.Time, date time.Time, params []string) (time.Time, err
 	slices.Sort(weekdays)
 
 	date = date.AddDate(0, 0, 1)
-	if !date.After(now) {
+	if !dateIsAfter(date, now) {
 		date = now.AddDate(0, 0, 1)
 	}
 
@@ -166,12 +176,12 @@ func ruleMonth(now time.Time, date time.Time, params []string) (time.Time, error
 	}
 
 	date = date.AddDate(0, 0, 1)
-	if !date.After(now) {
+	if !dateIsAfter(date, now) {
 		date = now.AddDate(0, 0, 1)
 	}
 	end := date.AddDate(4, 0, 0) // Limit searching timespan to 4 years
 
-	for !date.After(end) {
+	for !dateIsAfter(date, end) {
 		month := int(date.Month())
 
 		if pos, found := slices.BinarySearch(months, month); len(months) != 0 && !found {
@@ -245,7 +255,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		return "", ErrNoRepeatRule
 	}
 
-	date, err := time.Parse(DateFormat, dstart)
+	date, err := time.Parse(db.DateFormat, dstart)
 	if err != nil {
 		return "", err
 	}
@@ -268,17 +278,17 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		return "", err
 	}
 
-	return date.Format(DateFormat), nil
+	return date.Format(db.DateFormat), nil
 }
 
 func nextDateHandler(response http.ResponseWriter, request *http.Request) {
-	if request.Method != "GET" {
+	if request.Method != http.MethodGet {
 		response.WriteHeader(http.StatusMethodNotAllowed)
 		response.Header().Set("Allow", "GET")
 		return
 	}
 
-	now, err := time.Parse(DateFormat, request.FormValue("now"))
+	now, err := time.Parse(db.DateFormat, request.FormValue("now"))
 	if err != nil {
 		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(err.Error()))

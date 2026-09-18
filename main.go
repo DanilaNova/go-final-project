@@ -31,7 +31,6 @@ func main() {
 		webDir = envWebDir
 	}
 
-	var db db.Database
 	err := db.Init(dbFile)
 	if err != nil {
 		panic(err)
