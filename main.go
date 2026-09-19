@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"strconv"
 
@@ -16,7 +17,10 @@ var dbFile = "./scheduler.db"
 func main() {
 	envPort := os.Getenv("TODO_PORT")
 	if len(envPort) > 0 {
-		if eport, err := strconv.Atoi(envPort); err != nil {
+		eport, err := strconv.Atoi(envPort)
+		if err != nil {
+			log.Println("ERROR: could not parse port setting (\"" + envPort + "\"")
+		} else {
 			port = eport
 		}
 	}
@@ -36,6 +40,7 @@ func main() {
 		panic(err)
 	}
 
+	log.Println("INFO: starting server")
 	if err := server.Serve(webDir, port); err != nil {
 		panic(err)
 	}

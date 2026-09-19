@@ -12,5 +12,5 @@ func Serve(webDir string, port int) error {
 
 	api.Init()
 
-	return http.ListenAndServe("localhost:"+strconv.Itoa(port), nil)
+	return http.ListenAndServe(":"+strconv.Itoa(port), nil)
 }
