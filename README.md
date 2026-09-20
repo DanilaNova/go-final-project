@@ -18,10 +18,8 @@ This is a task scheduler written in go. It supports repetition rules with days i
 
 ### System dependencies
 
-- go 1.27.1
 - docker >=29.8.0
 - docker-buildx >= 0.37.1
-
 
 ### Quickstart
 
@@ -33,9 +31,6 @@ This is a task scheduler written in go. It supports repetition rules with days i
 ### Building from source
 
 ```bash
-# Compiling executable file
-go build -o main
-
 # Building docker image
 docker build -t venin/go-final-project
 
