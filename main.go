@@ -36,6 +36,12 @@ func main() {
 	}
 
 	err := db.Init(dbFile)
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			log.Println("ERROR: could not close database connection: ", err)
+		}
+	}()
 	if err != nil {
 		panic(err)
 	}

@@ -132,6 +132,9 @@ func ruleWeekday(now time.Time, date time.Time, params []string) (time.Time, err
 	}
 
 	weekday := int(date.Weekday())
+	if weekday == 0 {
+		weekday = 7
+	}
 
 	if pos, found := slices.BinarySearch(weekdays, weekday); !found {
 		if pos == len(weekdays) {
@@ -195,14 +198,6 @@ func ruleMonth(now time.Time, date time.Time, params []string) (time.Time, error
 		daysInMonth := getDaysInMonth(date)
 
 		i1, i2 := 0, 0
-		// Support for selecting any day from the end of the month is cut to meet the requirements of the tests.
-		// Therefore, this check is useless.
-		// for i, v := range monthdays_reverse {
-		// 	if v+daysInMonth >= 0 {
-		// 		break
-		// 	}
-		// 	i2 = i
-		// }
 
 		monthdays_forward_limit := len(monthdays_forward)
 		for monthdays_forward_limit > 0 && monthdays_forward[monthdays_forward_limit-1] > daysInMonth {
@@ -283,11 +278,12 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 
 func nextDateHandler(response http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodGet {
-		response.WriteHeader(http.StatusMethodNotAllowed)
 		response.Header().Set("Allow", "GET")
+		response.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 
+	response.Header().Set("Content-Type", "text/plain")
 	now, err := time.Parse(db.DateFormat, request.FormValue("now"))
 	if err != nil {
 		response.WriteHeader(http.StatusBadRequest)
