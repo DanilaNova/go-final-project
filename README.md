@@ -111,3 +111,7 @@ Parameters:
 - `FullNextDate` - controls whether "week" and "month" repetition rules are tested or not.
 - `Search` - controls whether searching api is tested or not.
 - `Token` - JWT used to authenticate on server. Leave empty if password is not set.
+
+## Known issues
+
+- If `TODO_DBFILE` is set, tests search for database file inside `tests` folder, use `./...` instead of `./tests`
