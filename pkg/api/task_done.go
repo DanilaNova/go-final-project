@@ -14,7 +14,7 @@ func taskDoneHandlerPost(response http.ResponseWriter, request *http.Request) {
 	id := request.FormValue("id")
 	if len(id) == 0 {
 		log.Println("ERROR: ", ErrNoIdentifier)
-		writeError(response, http.StatusInternalServerError, ErrNoIdentifier)
+		writeError(response, http.StatusBadRequest, ErrNoIdentifier)
 		return
 	}
 
@@ -22,7 +22,7 @@ func taskDoneHandlerPost(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("WARNING: " + ErrTaskNotFound.Error() + "(id: \"" + id + "\")")
-			writeError(response, http.StatusInternalServerError, ErrTaskNotFound)
+			writeError(response, http.StatusNotFound, ErrTaskNotFound)
 			return
 		}
 		log.Println("ERROR: sql error: ", err)
@@ -38,8 +38,7 @@ func taskDoneHandlerPost(response http.ResponseWriter, request *http.Request) {
 			return
 		}
 
-		response.WriteHeader(http.StatusOK)
-		err = writeJson(response, struct{}{})
+		err = writeJson(response, http.StatusOK, struct{}{})
 		if err != nil {
 			log.Println("ERROR: could not write response: ", err)
 			writeError(response, http.StatusInternalServerError, err)
@@ -62,8 +61,7 @@ func taskDoneHandlerPost(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	response.WriteHeader(http.StatusOK)
-	err = writeJson(response, struct{}{})
+	err = writeJson(response, http.StatusOK, struct{}{})
 	if err != nil {
 		log.Println("ERROR: could not write response: ", err)
 		writeError(response, http.StatusInternalServerError, err)

@@ -81,7 +81,7 @@ func taskHandlerGet(response http.ResponseWriter, request *http.Request) {
 	id := request.FormValue("id")
 	if len(id) == 0 {
 		log.Println("ERROR: ", ErrNoIdentifier)
-		writeError(response, http.StatusInternalServerError, ErrNoIdentifier)
+		writeError(response, http.StatusBadRequest, ErrNoIdentifier)
 		return
 	}
 
@@ -89,7 +89,7 @@ func taskHandlerGet(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("WARNING: " + ErrTaskNotFound.Error() + "(id: \"" + id + "\")")
-			writeError(response, http.StatusInternalServerError, ErrTaskNotFound)
+			writeError(response, http.StatusNotFound, ErrTaskNotFound)
 			return
 		}
 		log.Println("ERROR: sql error: ", err)
@@ -97,8 +97,7 @@ func taskHandlerGet(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	response.WriteHeader(http.StatusOK)
-	err = writeJson(response, task)
+	err = writeJson(response, http.StatusOK, task)
 	if err != nil {
 		log.Println("ERROR: could not write response: ", err)
 		writeError(response, http.StatusInternalServerError, err)
@@ -108,7 +107,7 @@ func taskHandlerGet(response http.ResponseWriter, request *http.Request) {
 func taskHandlerPost(response http.ResponseWriter, request *http.Request) {
 	task, err := parseTask(request)
 	if err != nil {
-		writeError(response, http.StatusInternalServerError, err)
+		writeError(response, http.StatusBadRequest, err)
 		return
 	}
 
@@ -119,7 +118,7 @@ func taskHandlerPost(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	err = writeJson(response, TaskId{id})
+	err = writeJson(response, http.StatusOK, TaskId{id})
 	if err != nil {
 		log.Println("ERROR: could not write response: ", err)
 		writeError(response, http.StatusInternalServerError, err)
@@ -129,7 +128,7 @@ func taskHandlerPost(response http.ResponseWriter, request *http.Request) {
 func taskHandlerPut(response http.ResponseWriter, request *http.Request) {
 	task, err := parseTask(request)
 	if err != nil {
-		writeError(response, http.StatusInternalServerError, err)
+		writeError(response, http.StatusBadRequest, err)
 		return
 	}
 
@@ -137,7 +136,7 @@ func taskHandlerPut(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("WARNING: " + ErrTaskNotFound.Error() + "(id: \"" + task.ID + "\")")
-			writeError(response, http.StatusInternalServerError, ErrTaskNotFound)
+			writeError(response, http.StatusNotFound, ErrTaskNotFound)
 			return
 		}
 		log.Println("ERROR: could not update task: ", err)
@@ -145,8 +144,7 @@ func taskHandlerPut(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	response.WriteHeader(http.StatusOK)
-	err = writeJson(response, struct{}{})
+	err = writeJson(response, http.StatusOK, struct{}{})
 	if err != nil {
 		log.Println("ERROR: could not write response: ", err)
 	}
@@ -156,7 +154,7 @@ func taskHandlerDelete(response http.ResponseWriter, request *http.Request) {
 	id := request.FormValue("id")
 	if len(id) == 0 {
 		log.Println("ERROR: ", ErrNoIdentifier)
-		writeError(response, http.StatusInternalServerError, ErrNoIdentifier)
+		writeError(response, http.StatusBadRequest, ErrNoIdentifier)
 		return
 	}
 
@@ -164,7 +162,7 @@ func taskHandlerDelete(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("WARNING: " + ErrTaskNotFound.Error() + "(id: \"" + id + "\")")
-			writeError(response, http.StatusInternalServerError, ErrTaskNotFound)
+			writeError(response, http.StatusNotFound, ErrTaskNotFound)
 			return
 		}
 		log.Println("ERROR: sql error: ", err)
@@ -179,8 +177,7 @@ func taskHandlerDelete(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	response.WriteHeader(http.StatusOK)
-	err = writeJson(response, struct{}{})
+	err = writeJson(response, http.StatusOK, struct{}{})
 	if err != nil {
 		log.Println("ERROR: could not write response: ", err)
 		writeError(response, http.StatusInternalServerError, err)
@@ -198,7 +195,7 @@ func taskHandler(response http.ResponseWriter, request *http.Request) {
 	case http.MethodDelete:
 		taskHandlerDelete(response, request)
 	default:
-		response.WriteHeader(http.StatusMethodNotAllowed)
 		response.Header().Set("Allow", "GET, POST, PUT, DELETE")
+		response.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }

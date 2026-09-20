@@ -38,7 +38,7 @@ func auth(next http.HandlerFunc) http.HandlerFunc {
 				})
 				if err != nil {
 					log.Println("ERROR: Failed to parse token: ", err)
-					writeError(w, http.StatusInternalServerError, err)
+					writeError(w, http.StatusUnauthorized, err)
 					return
 				}
 				valid = jwtToken.Valid
@@ -56,8 +56,8 @@ func auth(next http.HandlerFunc) http.HandlerFunc {
 
 func sighinHandler(response http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
-		response.WriteHeader(http.StatusMethodNotAllowed)
 		response.Header().Set("Allow", "POST")
+		response.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -74,7 +74,8 @@ func sighinHandler(response http.ResponseWriter, request *http.Request) {
 	err = json.Unmarshal(data, passRequest)
 	if err != nil {
 		log.Println("ERROR: could not parse pass request: ", err)
-		writeError(response, http.StatusInternalServerError, err)
+		writeError(response, http.StatusBadRequest, err)
+		return
 	}
 
 	if passRequest.Password != string(pass) {
@@ -91,8 +92,7 @@ func sighinHandler(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	response.WriteHeader(http.StatusOK)
-	err = writeJson(response, PassResponse{signedToken})
+	err = writeJson(response, http.StatusOK, PassResponse{signedToken})
 	if err != nil {
 		log.Println("ERROR: could not write response: ", err)
 		writeError(response, http.StatusInternalServerError, err)

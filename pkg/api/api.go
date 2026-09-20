@@ -10,8 +10,10 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-func writeJson(response http.ResponseWriter, data any) error {
+func writeJson(response http.ResponseWriter, code int, data any) error {
 	response.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	response.WriteHeader(code)
+
 	data_json, err := json.Marshal(data)
 	if err == nil {
 		_, err = response.Write(data_json)
@@ -20,8 +22,7 @@ func writeJson(response http.ResponseWriter, data any) error {
 }
 
 func writeError(response http.ResponseWriter, code int, err error) {
-	response.WriteHeader(code)
-	err = writeJson(response, ErrorResponse{err.Error()})
+	err = writeJson(response, code, ErrorResponse{err.Error()})
 	if err != nil {
 		log.Println("ERROR: could not write error response: ", err)
 	}
