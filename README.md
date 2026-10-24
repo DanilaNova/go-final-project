@@ -32,7 +32,7 @@ This is a task scheduler written in go. It supports repetition rules with days i
 
 ```bash
 # Building docker image
-docker build -t venin/go-final-project
+docker build -t venin/go-final-project .
 
 # Launching docker container
 docker run -d -p 7540:7540 venin/go-final-project

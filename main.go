@@ -36,15 +36,15 @@ func main() {
 	}
 
 	err := db.Init(dbFile)
+	if err != nil {
+		panic(err)
+	}
 	defer func() {
 		err := db.Close()
 		if err != nil {
 			log.Println("ERROR: could not close database connection: ", err)
 		}
 	}()
-	if err != nil {
-		panic(err)
-	}
 
 	log.Println("INFO: starting server")
 	if err := server.Serve(webDir, port); err != nil {

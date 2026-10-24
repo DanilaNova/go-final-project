@@ -21,11 +21,12 @@ type PassResponse struct {
 	Token string `json:"token"`
 }
 
+var password = os.Getenv("TODO_PASSWORD")
+
 func auth(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// смотрим наличие пароля
-		pass := os.Getenv("TODO_PASSWORD")
-		if len(pass) > 0 {
+		if len(password) > 0 {
 			var jwtStr string // JWT-токен из куки
 			var valid bool
 
@@ -34,7 +35,7 @@ func auth(next http.HandlerFunc) http.HandlerFunc {
 			if err == nil {
 				jwtStr = cookie.Value
 				jwtToken, err := jwt.Parse(jwtStr, func(t *jwt.Token) (any, error) {
-					return []byte(pass), nil
+					return []byte(password), nil
 				})
 				if err != nil {
 					log.Println("ERROR: Failed to parse token: ", err)

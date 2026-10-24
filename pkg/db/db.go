@@ -52,6 +52,9 @@ func Init(dbFile string) error {
 	if install {
 		_, err := sqlDB.Exec(schema)
 		if err != nil {
+			if err2 := sqlDB.Close(); err2 != nil {
+				err = errors.Join(err, err2)
+			}
 			return err
 		}
 	}

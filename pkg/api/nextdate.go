@@ -27,10 +27,10 @@ var ErrNumberOutOfRange = errors.New("number is out of range")
 var ErrNoNextDateSolution = errors.New("no solution for next date with given rule")
 
 func dateIsAfter(date, now time.Time) bool {
-	date_year, date_month, date_day := date.Date()
-	now_year, now_month, now_day := now.Date()
+	dateYear, dateMonth, dateDay := date.Date()
+	nowYear, nowMonth, nowDay := now.Date()
 
-	return date_year > now_year || (date_year == now_year && (date_month > now_month || (date_month == now_month && date_day > now_day)))
+	return dateYear > nowYear || (dateYear == nowYear && (dateMonth > nowMonth || (dateMonth == nowMonth && dateDay > nowDay)))
 }
 
 func getDaysInMonth(date time.Time) int {
@@ -299,7 +299,7 @@ func nextDateHandler(response http.ResponseWriter, request *http.Request) {
 	date, err = NextDate(now, date, repeat)
 	if err != nil {
 		log.Println("ERROR: cannot solve next date: ", err)
-		response.WriteHeader(http.StatusInternalServerError)
+		response.WriteHeader(http.StatusBadRequest)
 		_, err = response.Write([]byte(err.Error()))
 		if err != nil {
 			log.Println("ERROR: could not write error response: ", err)

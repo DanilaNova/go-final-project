@@ -1,15 +1,13 @@
 package api
 
 import (
-	"database/sql"
-	"errors"
 	"log"
 	"net/http"
 
 	"github.com/DanilaNova/go-final-project/pkg/db"
 )
 
-const TASK_GET_LIMIT = 50
+const taskGetLimit = 50
 
 type TaskList struct {
 	Tasks []*db.Task `json:"tasks"`
@@ -18,13 +16,8 @@ type TaskList struct {
 func tasksHandlerGet(response http.ResponseWriter, request *http.Request) {
 	search := request.FormValue("search")
 
-	tasks, err := db.GetTasks(TASK_GET_LIMIT, search)
+	tasks, err := db.GetTasks(taskGetLimit, search)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			log.Println("WARNING: got no tasks")
-			writeError(response, http.StatusNotFound, err)
-			return
-		}
 		log.Println("ERROR: cound not get tasks: ", err)
 		writeError(response, http.StatusInternalServerError, err)
 		return
